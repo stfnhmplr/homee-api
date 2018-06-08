@@ -1,0 +1,39 @@
+{
+  "name": "homee-api",
+  "version": "0.0.1",
+  "description": "a library to interact with homee",
+  "main": "homee.js",
+  "scripts": {
+    "test": "mocha --require babel-core/register"
+  },
+  "keywords": [
+    "homee",
+    "smarthome",
+    "automation"
+  ],
+  "author": "stfnhmplr <stfnhmplr@gmail.com> (https://himpler.com)",
+  "license": "MIT",
+  "dependencies": {
+    "request": "^2.83.0",
+    "sha512": "0.0.1",
+    "ws": "^5.0.0"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "devDependencies": {
+    "babel": "^6.23.0",
+    "babel-register": "^6.26.0",
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stfnhmplr/homee-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stfnhmplr/homee-api/issues"
+  },
+  "homepage": "https://github.com/stfnhmplr/homee-api#readme"
+}
