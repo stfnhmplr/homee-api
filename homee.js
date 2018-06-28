@@ -1,6 +1,6 @@
 /**
- * created by stfnhmplr on 2017-01-17 - refactored 2018-03-08
- * control your Homee via websocket with node.js
+ * created by stfnhmplr (info@himpler.com)
+ * a homee-api-wrapper
  * @LICENSE MIT
  */
 
@@ -8,7 +8,7 @@ const WebSocket = require('ws');
 const request = require('request');
 const sha512 = require('sha512');
 const EventEmitter = require('events')
-const Enums = require('./lib/enums')
+const debug = require('debug')('homee');
 
 class Homee extends EventEmitter {
 
@@ -17,27 +17,40 @@ class Homee extends EventEmitter {
      * @param host
      * @param user
      * @param password
+     * @param options
      */
-    constructor(host, user, password, device = 'homeeApi') {
+    constructor(host, user, password, options = {
+        device: 'homeeApi',
+        reconnect: true,
+        reconnectInterval: 5000,
+        maxRetries: Infinity
+    }) {
         super();
 
         this._host = host;
         this._user = user;
         this._password = password;
-        this._device = device;
-        this._deviceId = device.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/\s+/g, '-').toLowerCase();
+        this._device = options.device;
+        this._deviceId = options.device.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/\s+/g, '-').toLowerCase();
+        this._reconnectInterval = options.reconnectInterval;
+        this._shouldReconnect = options.reconnect;
+        this._maxRetries = options.maxRetries;
 
+        this._nodes = [];
         this._ws = null;
         this._token = '';
-        this._expires = '';
+        this._expires = 0;
+        this._connected = false;
+        this._retries = 0;
     }
 
     /**
-     *
+     * query access token
      * @returns {Promise<any>}
      * @private
      */
     _getAccessToken() {
+        debug('get access token')
         const options = {
             url: this._url() + '/access_token',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -55,54 +68,33 @@ class Homee extends EventEmitter {
         };
 
         return new Promise((resolve, reject) => {
-            if (this._token && this._expires > Date.now()) resolve(this._token);
-
+            if (this._token && this._expires > Date.now()) {
+                debug('token still valid')
+                resolve(this._token);
+            }
             request.post(options, (err, res, body) => {
                 if (!err) {
                     this._token = body.split('&')[0].split('=')[1];
                     this._expires = Date.now() + parseInt(body.split('&')[3].split('=')[1]);
+                    debug('recieved access token, valid until: %s', new Date(this._expires).toISOString())
                     resolve(this._token);
                 } else {
-                    reject(new Error('Homee: Error while receiving AccessToken: ' + err));
+                    debug('cannot recieve access token: %s', err)
+                    reject(new Error('Error while receiving AccessToken: ' + err));
                 }
             });
         });
     }
 
     /**
-     * establish a connection to homee
+     * connect to homee
      * @returns {Promise<any>}
      */
     connect() {
         return new Promise((resolve, reject) => {
             this._getAccessToken()
                 .then((token) => {
-                    this._ws = new WebSocket(this._wsUrl() + '/connection?access_token=' + token, {
-                            protocol: 'v2',
-                            protocolVersion: 13,
-                            origin: this._url()
-                        },
-                        (err) => {
-                            reject(new Error("Can't connect to homee ws" + err));
-                        }
-                    );
-
-                    this._ws.on('open', () => {
-                        resolve();
-                        this.send('GET:all');
-                    });
-
-                    this._ws.on('message', (message) => {
-                        this._handleMessage(message);
-                    });
-
-                    this._ws.on('close', (code) => {
-                        this.emit('disconnect', code);
-                    });
-
-                    this._ws.on('error', (error) => {
-                        this.emit('error', error);
-                    });
+                    this._openWs(resolve, reject);
                 })
                 .catch((err) => {
                     reject(err);
@@ -111,22 +103,120 @@ class Homee extends EventEmitter {
     }
 
     /**
-     * sends a raw message via websocket
-     * @param {String}  message  the message, i.e. 'GET:nodes'
+     * open a Websocket Connection to homee
+     * @param resolve
+     * @param reject
+     * @private
      */
-    send(message) {
-        this._ws.send(message, (err) => {
-            if (err) this.emit('error', 'message could not be sent' + err);
+    _openWs(resolve, reject) {
+        if (this._retries) {
+            debug('reconnect attempt #%d', this._retries);
+            this.emit('reconnect', this._retries);
+        }
+
+        if (this._retries++ > this._maxRetries) {
+            debug('reached max retries %d', this._maxRetries)
+            this.emit('maxRetries', this._maxRetries);
+            return;
+        }
+
+        try {
+            debug('trying to connect')
+            this._ws = new WebSocket(this._wsUrl() + '/connection?access_token=' + this._token, [], {
+                protocol: 'v2', protocolVersion: 13, origin: this._url(), //handshakeTimeout: 5000
+            });
+        } catch (err) {
+            debug('cannot open ws connection err: %s', err)
+            if (typeof reject === 'function') reject(new Error('cannot connect to homee' + err));
+            setTimeout(() => this._openWs(), this._reconnectInterval * this._retries)
+        }
+
+        this._ws.on('open', () => {
+            if (typeof resolve === 'function') resolve();
+            this._connected = true;
+            this._retries = 1;
+            this.emit('connected');
+            debug('connected to homee');
+            this._heartbeatHandler = this._startHearbeatHandler();
+            this.send('GET:all');
+        });
+
+        this._ws.on('message', (message) => {
+            this._handleMessage(message);
+        });
+
+        this._ws.on('close', (reason) => {
+            debug('lost connection to homee');
+            clearInterval(this._heartbeatHandler);
+            this.emit('disconnected', reason);
+            this._ws = null;
+            if (this._shouldReconnect) setTimeout(() => this._openWs(), this._reconnectInterval)
+        });
+
+        this._ws.on('error', (error) => {
+            debug('ws error: %s', error)
+            this.emit('error', error);
         });
     }
 
     /**
-     * handles icoming messages
+     * sends a raw message via websocket
+     * @param {String}  message  the message, i.e. 'GET:nodes'
+     */
+    send(message) {
+        debug('sending message "%s" to homee', message)
+
+        this._ws.send(message, (error) => {
+            if (error) {
+                debug('error sending message: %s', error)
+                this.emit('error', 'message could not be sent' + error);
+            }
+        });
+    }
+
+    /**
+     * handle incoming message
      * @private
      */
     _handleMessage(message) {
-        let m = JSON.parse(message);
-        this.emit('message', m);
+        message = JSON.parse(message);
+        const message_type = Object.keys(message)[0];
+
+        debug('recieved message of type "%s" from homee', message_type)
+
+        switch (message_type) {
+            case 'all':
+                this._nodes = message.all.nodes;
+                break;
+            case 'nodes':
+                this._nodes = message.nodes;
+                break;
+            case 'attribute':
+                this._handleAttributeChange(message.attribute)
+                break;
+        }
+
+        // broadcast on specific channel
+        if ('attribute' !== message_type) this.emit(message_type, message[message_type])
+
+        // broadcast message
+        this.emit('message', message);
+    }
+
+
+    /**
+     * attaches the the node to an given attribute and emits an event
+     * @param attribute
+     * @private
+     */
+    _handleAttributeChange(attribute) {
+        debug('attribute changed, attribute id %d', attribute.id)
+
+        if (this._nodes.length) {
+            attribute.node = this._nodes.find(node => node.id === attribute.node_id)
+        }
+
+        this.emit('attribute', attribute);
     }
 
     /**
@@ -137,6 +227,8 @@ class Homee extends EventEmitter {
      * @param value
      */
     setValue(device_id, attribute_id, value) {
+        debug('trying to set %d as target_value for attribute #%d (device #%d)', value, attribute_id, device_id);
+
         if (typeof device_id !== 'number') {
             this.emit('error', 'device_id must be a number');
             return;
@@ -156,7 +248,32 @@ class Homee extends EventEmitter {
     }
 
     /**
-     * generates the url
+     * start heartbeat handler to monitor ws connection
+     * @returns {number}
+     * @private
+     */
+    _startHearbeatHandler() {
+        debug('starting HearbeatHandler')
+
+        this._ws.on('pong', () => {
+            this._connected = true;
+        });
+
+        return setInterval(() => {
+            if (this._ws && this._connected === false) {
+                debug('did not receive pong, terminating connection...')
+                this._ws.terminate();
+                this._ws = null;
+                debug('terminated, try reconnect in %ds', this._reconnectInterval / 1000)
+                return;
+            }
+            this._connected = false;
+            this._ws.ping((err) => { debug('error sending ping command to homee') });
+        }, 30000);
+    }
+
+    /**
+     * returns the base url
      * @returns {string}
      * @private
      */
@@ -166,6 +283,11 @@ class Homee extends EventEmitter {
         return `http://${this._host}:7681`;
     }
 
+    /**
+     * returns the ws-url
+     * @returns {string}
+     * @private
+     */
     _wsUrl() {
         if (/^[0-z]{12}$/.test(this._host)) return `wss://${this._host}.hom.ee`;
 

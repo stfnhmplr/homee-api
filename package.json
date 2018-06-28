@@ -1,6 +1,6 @@
 {
   "name": "homee-api",
-  "version": "0.0.1",
+  "version": "0.9.1",
   "description": "a library to interact with homee",
   "main": "homee.js",
   "scripts": {
@@ -14,9 +14,10 @@
   "author": "stfnhmplr <stfnhmplr@gmail.com> (https://himpler.com)",
   "license": "MIT",
   "dependencies": {
-    "request": "^2.83.0",
+    "debug": "^3.1.0",
+    "request": "^2.87.0",
     "sha512": "0.0.1",
-    "ws": "^5.0.0"
+    "ws": "^5.2.1"
   },
   "directories": {
     "lib": "lib",
