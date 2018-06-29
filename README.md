@@ -20,11 +20,14 @@ const homee = new Homee(host, user, password, options);
 homee.connect().then(() => {
     
     // available events
+    
     homee.on('message', (message) => {});
-    homee.on('change', (attribute) => {})
-    homee.on('disconnect', (code) => {});
-    homee.on('error', (err) => {});
+    homee.on('connect', () => {});
     homee.on('reconnect', (retries) => {})
+    homee.on('disconnect', (reason) => {});
+    
+    // handle at least the "error" event to prevent crashing
+    homee.on('error', (err) => {});
     
     // special events
     homee.on('user', (user) => {})
@@ -53,4 +56,7 @@ homee.send('your-message, i.E. GET:nodes');
 
 // update an attributes target_value
 homee.setValue(device_id, attribute_id, value);
+
+// close connection
+homee.disconnect();
 ```

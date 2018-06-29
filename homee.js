@@ -42,6 +42,7 @@ class Homee extends EventEmitter {
         this._expires = 0;
         this._connected = false;
         this._retries = 0;
+        this._shouldClose = false;
     }
 
     /**
@@ -91,6 +92,8 @@ class Homee extends EventEmitter {
      * @returns {Promise<any>}
      */
     connect() {
+        this._shouldClose = false;
+
         return new Promise((resolve, reject) => {
             this._getAccessToken()
                 .then((token) => {
@@ -123,7 +126,7 @@ class Homee extends EventEmitter {
         try {
             debug('trying to connect')
             this._ws = new WebSocket(this._wsUrl() + '/connection?access_token=' + this._token, [], {
-                protocol: 'v2', protocolVersion: 13, origin: this._url(), //handshakeTimeout: 5000
+                protocol: 'v2', protocolVersion: 13, origin: this._url(), handshakeTimeout: 5000
             });
         } catch (err) {
             debug('cannot open ws connection err: %s', err)
@@ -135,8 +138,10 @@ class Homee extends EventEmitter {
             if (typeof resolve === 'function') resolve();
             this._connected = true;
             this._retries = 1;
+
             this.emit('connected');
             debug('connected to homee');
+
             this._heartbeatHandler = this._startHearbeatHandler();
             this.send('GET:all');
         });
@@ -146,16 +151,20 @@ class Homee extends EventEmitter {
         });
 
         this._ws.on('close', (reason) => {
-            debug('lost connection to homee');
-            clearInterval(this._heartbeatHandler);
-            this.emit('disconnected', reason);
+            if (!this._shouldClose && this._retries <= 1) debug('lost connection to homee');
+            this._stopHeartbeathandler();
+
+            this._connected = false;
             this._ws = null;
-            if (this._shouldReconnect) setTimeout(() => this._openWs(), this._reconnectInterval)
+
+            this.emit('disconnected', reason);
+            if (this._shouldReconnect && !this._shouldClose)
+                setTimeout(() => this._openWs(), this._reconnectInterval * this._retries)
         });
 
-        this._ws.on('error', (error) => {
-            debug('ws error: %s', error)
-            this.emit('error', error);
+        this._ws.on('error', (err) => {
+            debug('Websocket %s', err)
+            this.emit('error', err.toString());
         });
     }
 
@@ -166,10 +175,10 @@ class Homee extends EventEmitter {
     send(message) {
         debug('sending message "%s" to homee', message)
 
-        this._ws.send(message, (error) => {
-            if (error) {
-                debug('error sending message: %s', error)
-                this.emit('error', 'message could not be sent' + error);
+        this._ws.send(message, (err) => {
+            if (err) {
+                debug('error sending message: %s', err)
+                this.emit('error', 'message could not be sent' + err);
             }
         });
     }
@@ -202,7 +211,6 @@ class Homee extends EventEmitter {
         // broadcast message
         this.emit('message', message);
     }
-
 
     /**
      * attaches the the node to an given attribute and emits an event
@@ -264,12 +272,33 @@ class Homee extends EventEmitter {
                 debug('did not receive pong, terminating connection...')
                 this._ws.terminate();
                 this._ws = null;
-                debug('terminated, try reconnect in %ds', this._reconnectInterval / 1000)
+                debug('lost ping, try reconnect in %ds', this._reconnectInterval / 1000)
                 return;
             }
             this._connected = false;
-            this._ws.ping((err) => { debug('error sending ping command to homee') });
+            this._ws.ping((err) => {
+                if (err) debug('error sending ping command to homee: %s', err.toString()) });
         }, 30000);
+    }
+
+    /**
+     * stop heartbeathandler
+     * @private
+     */
+    _stopHeartbeathandler() {
+        if (!this._heartbeatHandler) return;
+
+        clearInterval(this._heartbeatHandler);
+        this._heartbeatHandler = null;
+        debug('stopped HearbeatHandler');
+    }
+
+    disconnect() {
+        this._shouldClose = true;
+
+        this._ws.close(1000, 'closed by user request');
+        debug('connection closed');
+        this.emit('disconnect', 'closed by user request')
     }
 
     /**
