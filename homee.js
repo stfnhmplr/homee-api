@@ -143,7 +143,7 @@ class Homee extends EventEmitter {
             debug('connected to homee');
 
             this._heartbeatHandler = this._startHearbeatHandler();
-            this.send('GET:all');
+            this.send('GET:nodes');
         });
 
         this._ws.on('message', (message) => {
@@ -264,10 +264,12 @@ class Homee extends EventEmitter {
         debug('starting HearbeatHandler')
 
         this._ws.on('pong', () => {
+            debug('received pong')
             this._connected = true;
         });
 
         return setInterval(() => {
+            debug('send ping')
             if (this._ws && this._connected === false) {
                 debug('did not receive pong, terminating connection...')
                 this._ws.terminate();
@@ -290,7 +292,7 @@ class Homee extends EventEmitter {
 
         clearInterval(this._heartbeatHandler);
         this._heartbeatHandler = null;
-        debug('stopped HearbeatHandler');
+        debug('stopped HeartbeatHandler');
     }
 
     disconnect() {
@@ -308,7 +310,6 @@ class Homee extends EventEmitter {
      */
     _url() {
         if (/^[0-z]{12}$/.test(this._host)) return `https://${this._host}.hom.ee`;
-
         return `http://${this._host}:7681`;
     }
 
@@ -319,7 +320,6 @@ class Homee extends EventEmitter {
      */
     _wsUrl() {
         if (/^[0-z]{12}$/.test(this._host)) return `wss://${this._host}.hom.ee`;
-
         return `ws://${this._host}:7681`;
     }
 }
