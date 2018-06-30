@@ -22,9 +22,10 @@ homee.connect().then(() => {
     // available events
     
     homee.on('message', (message) => {});
-    homee.on('connect', () => {});
+    homee.on('connected', () => {});
     homee.on('reconnect', (retries) => {})
     homee.on('disconnect', (reason) => {});
+    homee.on('maxRetries', (maxRetries) => {});
     
     // handle at least the "error" event to prevent crashing
     homee.on('error', (err) => {});
@@ -32,7 +33,7 @@ homee.connect().then(() => {
     // special events
     homee.on('user', (user) => {})
     homee.on('attribtue', (attribute) => {})
-    homee.on('node', (node) => {})
+    homee.on('nodes', (nodes) => {})
     // ...tbc
     
 }).catch((error) => {

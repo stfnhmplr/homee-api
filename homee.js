@@ -9,6 +9,7 @@ const request = require('request');
 const sha512 = require('sha512');
 const EventEmitter = require('events')
 const debug = require('debug')('homee');
+const Enums = require('./lib/enums')
 
 class Homee extends EventEmitter {
 
@@ -43,6 +44,8 @@ class Homee extends EventEmitter {
         this._connected = false;
         this._retries = 0;
         this._shouldClose = false;
+
+        this.enums = Enums;
     }
 
     /**
@@ -300,7 +303,7 @@ class Homee extends EventEmitter {
 
         this._ws.close(1000, 'closed by user request');
         debug('connection closed');
-        this.emit('disconnect', 'closed by user request')
+        this.emit('disconnected', 'closed by user request')
     }
 
     /**
