@@ -191,10 +191,18 @@ class Homee extends EventEmitter {
      * @private
      */
     _handleMessage(message) {
-        message = JSON.parse(message);
-        const message_type = Object.keys(message)[0];
+        let message_type;
 
-        debug('recieved message of type "%s" from homee', message_type)
+        try {
+            message = JSON.parse(message);
+            message_type = Object.keys(message)[0];
+        } catch (error) {
+            debug('Error parsing incoming message %s', error);
+            this.emit('error', error);
+            return;
+        }
+
+        debug('recieved message of type "%s" from homee', message_type);
 
         switch (message_type) {
             case 'all':

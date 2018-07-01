@@ -24,7 +24,7 @@ homee.connect().then(() => {
     homee.on('message', (message) => {});
     homee.on('connected', () => {});
     homee.on('reconnect', (retries) => {})
-    homee.on('disconnect', (reason) => {});
+    homee.on('disconnected', (reason) => {});
     homee.on('maxRetries', (maxRetries) => {});
     
     // handle at least the "error" event to prevent crashing
