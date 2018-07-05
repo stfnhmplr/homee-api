@@ -15,10 +15,10 @@ class Homee extends EventEmitter {
 
     /**
      *
-     * @param host
-     * @param user
-     * @param password
-     * @param options
+     * @param host {string}
+     * @param user {string}
+     * @param password {string}
+     * @param options {object}
      */
     constructor(host, user, password, options = {
         device: 'homeeApi',
@@ -77,14 +77,17 @@ class Homee extends EventEmitter {
                 resolve(this._token);
             }
             request.post(options, (err, res, body) => {
-                if (!err) {
+                if (!err && res.statusCode === 200) {
                     this._token = body.split('&')[0].split('=')[1];
-                    this._expires = Date.now() + parseInt(body.split('&')[3].split('=')[1]);
+                    this._expires = Date.now() + parseInt(body.split('&')[3].split('=')[1])*1000;
                     debug('recieved access token, valid until: %s', new Date(this._expires).toISOString())
                     resolve(this._token);
+                } else if (!err && res.statusCode !== 200) {
+                    debug('cannot recieve access token, recieved status %d', res.statusCode)
+                    reject(new Error(`cannot recieve access token, recieved status ${res.statusCode}`));
                 } else {
-                    debug('cannot recieve access token: %s', err)
-                    reject(new Error('Error while receiving AccessToken: ' + err));
+                    debug('cannot recieve access token, error %s', err)
+                    reject(new Error(`cannot recieve access token, error ${err}`));
                 }
             });
         });
@@ -110,8 +113,8 @@ class Homee extends EventEmitter {
 
     /**
      * open a Websocket Connection to homee
-     * @param resolve
-     * @param reject
+     * @param resolve {function}
+     * @param reject {function}
      * @private
      */
     _openWs(resolve, reject) {
@@ -214,10 +217,15 @@ class Homee extends EventEmitter {
             case 'attribute':
                 this._handleAttributeChange(message.attribute)
                 break;
+            case 'attribute_history':
+            case 'homeegram_history':
+            case 'node_history':
+                this.emit('history', message_type.replace('_history', ''), message[message_type]);
         }
 
         // broadcast on specific channel
-        if ('attribute' !== message_type) this.emit(message_type, message[message_type])
+        const ignore = ['attribute', 'attribute_history', 'homeegram_history', 'node_history'];
+        if (ignore.indexOf(message_type) === - 1) this.emit(message_type, message[message_type])
 
         // broadcast message
         this.emit('message', message);
@@ -225,7 +233,7 @@ class Homee extends EventEmitter {
 
     /**
      * attaches the the node to an given attribute and emits an event
-     * @param attribute
+     * @param attribute {object}
      * @private
      */
     _handleAttributeChange(attribute) {
@@ -241,9 +249,9 @@ class Homee extends EventEmitter {
     /**
      * update attribute values
      * PUT:/nodes/1/attributes/1?target_value=50.5
-     * @param device_id
-     * @param attribute_id
-     * @param value
+     * @param device_id {number}
+     * @param attribute_id {number}
+     * @param value {number}
      */
     setValue(device_id, attribute_id, value) {
         debug('trying to set %d as target_value for attribute #%d (device #%d)', value, attribute_id, device_id);
@@ -295,6 +303,16 @@ class Homee extends EventEmitter {
     }
 
     /**
+     * plays a homeegram
+     *
+    * @param id {number} Homeegram ID
+     */
+    play (id) {
+        debug('play homeegram #%d', id);
+        this.send(`PUT:homeegrams/${id}?play=1`);
+    }
+
+    /**
      * stop heartbeathandler
      * @private
      */
@@ -306,12 +324,43 @@ class Homee extends EventEmitter {
         debug('stopped HeartbeatHandler');
     }
 
+    /**
+     * close connection
+     */
     disconnect() {
         this._shouldClose = true;
 
         this._ws.close(1000, 'closed by user request');
         debug('connection closed');
         this.emit('disconnected', 'closed by user request')
+    }
+
+    /**
+     * retrieve history for node, attribute or homeegram
+     * @param type  "node", "attribute" or "homeegram"
+     * @param id    node id, attribute id, or homeegram id
+     * @param from  Timestamp
+     * @param till  Timestamp
+     */
+    getHistory(type, id, from = Date.now()-604800000, till = Date.now()) {
+        debug('request history for %s #%d', type, id);
+
+        from = Math.floor(from/1000);
+        till = Math.floor(till/1000);
+
+        switch (type) {
+            case 'node':
+            case 'homeegram':
+                this.send(`GET:${type}s/${id}/history?from=${from}&till=${till}`);
+                break;
+            case 'attribute':
+                const attribute = [].concat.apply([], this._nodes.map(n => n.attributes)).find(a => a.id === id);
+                this.send(`GET:nodes/${id}/attributes/${attribute.id}/history?from=${from}&till=${till}`);
+                break;
+            default:
+                this.emit('error', 'history is only available for type "node", "attribute" and "homeegram"');
+                return;
+        }
     }
 
     /**

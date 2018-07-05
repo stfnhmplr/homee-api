@@ -18,24 +18,7 @@ const Homee = require('homee-api');
 const homee = new Homee(host, user, password, options);
 
 homee.connect().then(() => {
-    
-    // available events
-    
-    homee.on('message', (message) => {});
-    homee.on('connected', () => {});
-    homee.on('reconnect', (retries) => {})
-    homee.on('disconnected', (reason) => {});
-    homee.on('maxRetries', (maxRetries) => {});
-    
-    // handle at least the "error" event to prevent crashing
-    homee.on('error', (err) => {});
-    
-    // special events
-    homee.on('user', (user) => {})
-    homee.on('attribtue', (attribute) => {})
-    homee.on('nodes', (nodes) => {})
-    // ...tbc
-    
+    //
 }).catch((error) => {
     console.log(error);
 });
@@ -50,13 +33,39 @@ homee.connect().then(() => {
         maxRetries: Infinity
     }
 ```
+
+### Events
+```js
+    
+    // handle at least the "error" event to prevent crashing
+    homee.on('error', (err) => {});
+    
+    homee.on('message', (message) => {});
+    homee.on('connected', () => {});
+    homee.on('reconnect', (retries) => {})
+    homee.on('disconnected', (reason) => {});
+    homee.on('maxRetries', (maxRetries) => {});
+    
+    // special events
+    homee.on('user', (user) => {})
+    homee.on('attribtue', (attribute) => {})
+    homee.on('nodes', (nodes) => {})
+    homee.on('history', (type, data) => {})
+    // ...tbc
+```
 ### Methods
 ```js
 // send any message
 homee.send('your-message, i.E. GET:nodes');
 
+// play a homeegram
+homee.play(id)
+
 // update an attributes target_value
 homee.setValue(device_id, attribute_id, value);
+
+// get History for node or attribute (type), from and till are unix timestamps 
+homee.getHistory(type, id, from, till);
 
 // close connection
 homee.disconnect();
