@@ -58,14 +58,16 @@ homee.connect().then(() => {
 // send any message
 homee.send('your-message, i.E. GET:nodes');
 
-// play a homeegram
+// homeegram interactions
 homee.play(id)
+homee.activateHomeegram(id);
+homee.deactivateHomeegram(id);
 
 // update an attributes target_value
 homee.setValue(device_id, attribute_id, value);
 
 // get History for node or attribute (type), from and till are unix timestamps 
-homee.getHistory(type, id, from, till);
+homee.getHistory(type, id, from, till, limit);
 
 // close connection
 homee.disconnect();
