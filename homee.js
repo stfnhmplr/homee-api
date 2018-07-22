@@ -6,7 +6,7 @@
 
 const WebSocket = require('ws');
 const request = require('request');
-const sha512 = require('sha512');
+const shajs = require('sha.js')
 const EventEmitter = require('events')
 const debug = require('debug')('homee');
 const Enums = require('./lib/enums')
@@ -67,7 +67,7 @@ class Homee extends EventEmitter {
             },
             auth: {
                 user: this._user,
-                pass: sha512(this._password).toString('hex')
+                pass: shajs('sha512').update(this._password).digest('hex')
             }
         };
 
@@ -307,9 +307,27 @@ class Homee extends EventEmitter {
      *
     * @param id {number} Homeegram ID
      */
-    play (id) {
+    play(id) {
         debug('play homeegram #%d', id);
         this.send(`PUT:homeegrams/${id}?play=1`);
+    }
+
+    /**
+     * activates a homeegram
+     * @param id
+     */
+    activateHomeegram(id) {
+        debug('activate homeegram #%d', id);
+        this.send(`PUT:homeegrams/${id}?active=1`)
+    }
+
+    /**
+     * deactivates a homeegram
+     * @param id
+     */
+    deactivateHomeegram(id) {
+        debug('deactivate homeegram #%d', id);
+        this.send(`PUT:homeegrams/${id}?active=0`)
     }
 
     /**
@@ -338,24 +356,27 @@ class Homee extends EventEmitter {
     /**
      * retrieve history for node, attribute or homeegram
      * @param type  "node", "attribute" or "homeegram"
-     * @param id    node id, attribute id, or homeegram id
+     * @param id  node id, attribute id, or homeegram id
      * @param from  Timestamp
      * @param till  Timestamp
+     * @param limit  Number
      */
-    getHistory(type, id, from = Date.now()-604800000, till = Date.now()) {
+    getHistory(type, id, from = null, till = null, limit = null) {
         debug('request history for %s #%d', type, id);
 
-        from = Math.floor(from/1000);
-        till = Math.floor(till/1000);
+        let params = '';
+        if (from) params += `from=${Math.floor(from/1000)}&`;
+        if (till) params += `till=${Math.floor(till/1000)}&`;
+        if (limit) params += `limit=${limit}&`;
 
         switch (type) {
             case 'node':
             case 'homeegram':
-                this.send(`GET:${type}s/${id}/history?from=${from}&till=${till}`);
+                this.send(`GET:${type}s/${id}/history?${params}`);
                 break;
             case 'attribute':
                 const attribute = [].concat.apply([], this._nodes.map(n => n.attributes)).find(a => a.id === id);
-                this.send(`GET:nodes/${id}/attributes/${attribute.id}/history?from=${from}&till=${till}`);
+                this.send(`GET:nodes/${id}/attributes/${attribute.id}/history?${params}`);
                 break;
             default:
                 this.emit('error', 'history is only available for type "node", "attribute" and "homeegram"');
