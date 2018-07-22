@@ -1,6 +1,6 @@
 {
   "name": "homee-api",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "description": "a library to interact with homee",
   "main": "homee.js",
   "scripts": {
@@ -16,7 +16,7 @@
   "dependencies": {
     "debug": "^3.1.0",
     "request": "^2.87.0",
-    "sha512": "0.0.1",
+    "sha.js": "^2.4.11",
     "ws": "~5.0.0"
   },
   "directories": {
