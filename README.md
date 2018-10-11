@@ -66,9 +66,23 @@ homee.deactivateHomeegram(id);
 // update an attributes target_value
 homee.setValue(device_id, attribute_id, value);
 
+// group interactions
+homee.createGroup(name, image);
+homee.deleteGroup(id);
+homee.getNodesByGroup(id); // id or group name
+
 // get History for node or attribute (type), from and till are unix timestamps 
 homee.getHistory(type, id, from, till, limit);
 
 // close connection
 homee.disconnect();
+```
+
+### Stored Nodes
+The homee api keeps a copy of all your nodes, attributes and groups. Each time the value of an attribute changes, the stored data is also updated. The following attributes give you access to the data at any time.
+
+```js
+const nodes = homee.nodes
+const attributes = homee.attributes
+const groups = homee.groups
 ```

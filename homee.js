@@ -38,6 +38,8 @@ class Homee extends EventEmitter {
         this._maxRetries = options.maxRetries;
 
         this._nodes = [];
+        this._groups = [];
+        this._relationships = [];
         this._ws = null;
         this._token = '';
         this._expires = 0;
@@ -149,7 +151,7 @@ class Homee extends EventEmitter {
             debug('connected to homee');
 
             this._heartbeatHandler = this._startHearbeatHandler();
-            this.send('GET:nodes');
+            this.send('GET:all');
         });
 
         this._ws.on('message', (message) => {
@@ -210,9 +212,20 @@ class Homee extends EventEmitter {
         switch (message_type) {
             case 'all':
                 this._nodes = message.all.nodes;
+                this._groups = message.all.groups;
+                this._relationships = message.all.relationships;
                 break;
             case 'nodes':
                 this._nodes = message.nodes;
+                break;
+            case 'node':
+                this._updateNodes(message.node);
+                break;
+            case 'groups':
+                this._groups = message.groups
+                break;
+            case 'relationships':
+                this._relationships = message.relationships
                 break;
             case 'attribute':
                 this._handleAttributeChange(message.attribute)
@@ -232,7 +245,7 @@ class Homee extends EventEmitter {
     }
 
     /**
-     * attaches the the node to an given attribute and emits an event
+     * attaches the the node to an given attribute, updates the attribute at the global node list and emits an event
      * @param attribute {object}
      * @private
      */
@@ -240,7 +253,11 @@ class Homee extends EventEmitter {
         debug('attribute changed, attribute id %d', attribute.id)
 
         if (this._nodes.length) {
-            attribute.node = this._nodes.find(node => node.id === attribute.node_id)
+            const nodeIndex = this._nodes.findIndex(node => node.id === attribute.node_id)
+            const attributeIndex = this._nodes[nodeIndex].attributes.findIndex(a => a.id === attribute.id)
+
+            this._nodes[nodeIndex].attributes[attributeIndex] = attribute
+            attribute.node = this._nodes[nodeIndex]
         }
 
         this.emit('attribute', attribute);
@@ -301,6 +318,75 @@ class Homee extends EventEmitter {
                 if (err) debug('error sending ping command to homee: %s', err.toString()) });
         }, 30000);
     }
+
+
+    /**
+     * get groups
+     * @returns {Array}
+     */
+    get groups() {
+        return this._groups
+    }
+
+    /**
+     * get nodes
+     * @returns {Array}
+     */
+    get nodes() {
+        return this._nodes;
+    }
+
+    /**
+     * get attributes
+     * @returns {*}
+     */
+    get attributes() {
+        if (!this._nodes.length) return [];
+
+        return this._nodes.map(n => n.attributes).reduce((a, b) => a.concat(b), []);
+    }
+
+    /**
+     * returns the nodes of a given group
+     * @param group String|Number
+     * @returns {Array}
+     */
+    getNodesByGroup(group) {
+        if (!this._relationships) throw new Error('No relationships available')
+
+        if (typeof(group) === 'string') {
+            group = this._groups.find(g => g.name === encodeURIComponent(group)).id
+        }
+
+        const nodeIds = this._relationships.filter(r => r.group_id === group).map(r => r.node_id)
+        return this._nodes.filter(n => nodeIds.indexOf(n.id) > -1)
+    }
+
+
+    _updateNodes(node) {
+        const nodeIndex = this._nodes.findIndex(n => n.id === node.id)
+        this._nodes[nodeIndex] = node;
+    }
+
+    /**
+     * create a new group
+     *
+     * @param String name
+     * @param String image
+     */
+    createGroup(name, image = 'default') {
+        this.send(`POST:groups?name=${name}&image=${image}`)
+    }
+
+
+    /**
+     * delete a group
+     * @param id Number
+     */
+    deleteGroup(id) {
+        this.send(`DELETE:groups/${id}`);
+    }
+
 
     /**
      * plays a homeegram
