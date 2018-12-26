@@ -82,14 +82,14 @@ class Homee extends EventEmitter {
                 if (!err && res.statusCode === 200) {
                     this._token = body.split('&')[0].split('=')[1];
                     this._expires = Date.now() + parseInt(body.split('&')[3].split('=')[1])*1000;
-                    debug('recieved access token, valid until: %s', new Date(this._expires).toISOString())
+                    debug('received access token, valid until: %s', new Date(this._expires).toISOString())
                     resolve(this._token);
                 } else if (!err && res.statusCode !== 200) {
-                    debug('cannot recieve access token, recieved status %d', res.statusCode)
-                    reject(new Error(`cannot recieve access token, recieved status ${res.statusCode}`));
+                    debug('cannot receive access token, received status %d', res.statusCode)
+                    reject(new Error(`cannot receive access token, received status ${res.statusCode}`));
                 } else {
-                    debug('cannot recieve access token, error %s', err)
-                    reject(new Error(`cannot recieve access token, error ${err}`));
+                    debug('cannot receive access token, error %s', err)
+                    reject(new Error(`cannot receive access token, error ${err}`));
                 }
             });
         });
@@ -207,7 +207,7 @@ class Homee extends EventEmitter {
             return;
         }
 
-        debug('recieved message of type "%s" from homee', message_type);
+        debug('received message of type "%s" from homee', message_type);
 
         switch (message_type) {
             case 'all':
