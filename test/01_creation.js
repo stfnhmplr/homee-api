@@ -11,7 +11,7 @@ describe('01 creation', () => {
         })
 
         it('should have a non default device-name if specified', () => {
-            const homee = new Homee('192.168.178.1', 'userxy', 'super-secret', 'sample device');
+            const homee = new Homee('192.168.178.1', 'userxy', 'super-secret', {device: 'sample device'});
             assert.equal(homee._device, 'sample device');
         });
     })
@@ -25,9 +25,30 @@ describe('01 creation', () => {
         })
 
         it('should have a non default, kebab case device-id if specified', ()  => {
-            const homee = new Homee('192.168.178.1', 'userxy', 'super-secret', 'sample device');
+            const homee = new Homee('192.168.178.1', 'userxy', 'super-secret', {device: 'sample device'});
 
             assert.equal(homee._deviceId, 'sample-device');
+        })
+    })
+
+    describe('#options', () => {
+        it('should merge the options object with the default values', () => {
+            const homee = new Homee('192.168.178.1', 'userxy', 'supersecret', {
+                device: 'sample-device',
+                reconnect: false
+            });
+
+            assert.equal(homee._reconnectInterval, 5000);
+            assert.equal(homee._maxRetries, Infinity);
+        })
+
+        it('should have default options if no custom options provided', () => {
+            const homee = new Homee('192.168.178.1', 'userxy', 'supersecret');
+
+            assert.equal(homee._device, 'homeeApi');
+            assert.equal(homee._shouldReconnect, true);
+            assert.equal(homee._reconnectInterval, 5000);
+            assert.equal(homee._maxRetries, Infinity);
         })
     })
 

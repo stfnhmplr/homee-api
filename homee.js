@@ -20,13 +20,22 @@ class Homee extends EventEmitter {
      * @param password {string}
      * @param options {object}
      */
-    constructor(host, user, password, options = {
-        device: 'homeeApi',
-        reconnect: true,
-        reconnectInterval: 5000,
-        maxRetries: Infinity
-    }) {
+    constructor(host, user, password, customOptions = {}) {
         super();
+
+        let options = {
+            device: 'homeeApi',
+            reconnect: true,
+            reconnectInterval: 5000,
+            maxRetries: Infinity
+        }
+
+        // merge options
+        for (let attr in customOptions) {
+            if (customOptions.hasOwnProperty(attr)) {
+                options[attr] = customOptions[attr];
+            }
+        }
 
         this._host = host;
         this._user = user;
