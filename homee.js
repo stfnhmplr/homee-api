@@ -224,20 +224,20 @@ class Homee extends EventEmitter {
                 this._groups = message.all.groups;
                 this._relationships = message.all.relationships;
                 break;
-            case 'nodes':
-                this._nodes = message.nodes;
-                break;
-            case 'node':
-                this._updateNodes(message.node);
+            case 'attribute':
+                this._handleAttributeChange(message.attribute)
                 break;
             case 'groups':
                 this._groups = message.groups
                 break;
+            case 'node':
+                this._updateNodes(message.node);
+                break;
+            case 'nodes':
+                this._nodes = message.nodes;
+                break;
             case 'relationships':
                 this._relationships = message.relationships
-                break;
-            case 'attribute':
-                this._handleAttributeChange(message.attribute)
                 break;
             case 'attribute_history':
             case 'homeegram_history':
@@ -477,6 +477,25 @@ class Homee extends EventEmitter {
                 this.emit('error', 'history is only available for type "node", "attribute" and "homeegram"');
                 return;
         }
+    }
+
+
+    /**
+     * retrieve diary entries
+     * hint: you should use one or more parameters to shrink the result set
+     * @param from  Timestamp
+     * @param till  Timestamp
+     * @param limit  Number
+     */
+    getDiary(from = null, till = null, limit = null) {
+        debug('request diary entries')
+
+        let params = '';
+        if (from) params += `from=${Math.floor(from/1000)}&`;
+        if (till) params += `till=${Math.floor(till/1000)}&`;
+        if (limit) params += `limit=${limit}&`;
+
+        this.send(`GET:diary?${params}`)
     }
 
     /**

@@ -71,6 +71,9 @@ homee.createGroup(name, image);
 homee.deleteGroup(id);
 homee.getNodesByGroup(id); // id or group name
 
+// get diary entries (you should use at least one parameter to shrink the result set)
+homee.getDiary(from, till, limit);
+
 // get History for node or attribute (type), from and till are unix timestamps 
 homee.getHistory(type, id, from, till, limit);
 
