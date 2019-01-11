@@ -20,7 +20,7 @@ class Homee extends EventEmitter {
      * @param password {string}
      * @param options {object}
      */
-    constructor(host, user, password, customOptions = {}) {
+    constructor(host, user, password, cOptions = {}) {
         super();
 
         let options = {
@@ -31,9 +31,9 @@ class Homee extends EventEmitter {
         }
 
         // merge options
-        for (let attr in customOptions) {
-            if (customOptions.hasOwnProperty(attr)) {
-                options[attr] = customOptions[attr];
+        for (let attr in cOptions) {
+            if (cOptions.hasOwnProperty(attr)) {
+                options[attr] = cOptions[attr];
             }
         }
 
@@ -72,9 +72,9 @@ class Homee extends EventEmitter {
             form: {
                 device_name: this._device,
                 device_hardware_id: this._deviceId,
-                device_os: 5, // Linux
-                device_type: 3, // Desktop
-                device_app: 1 // homee
+                device_os: this.enums.CADeviceOS.CADeviceOSLinux,
+                device_type: this.enums.CADeviceType.CADeviceTypeNone,
+                device_app: this.enums.CADeviceApp.CADeviceAppHomee
             },
             auth: {
                 user: this._user,
