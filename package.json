@@ -36,5 +36,11 @@
   "bugs": {
     "url": "https://github.com/stfnhmplr/homee-api/issues"
   },
-  "homepage": "https://github.com/stfnhmplr/homee-api#readme"
+  "homepage": "https://github.com/stfnhmplr/homee-api#readme",
+  "prettier": {
+    "singleQuote": true,
+    "tabWidth": 4,
+    "trailingComma": true,
+    "printWidth": 100
+  }
 }
