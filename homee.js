@@ -153,9 +153,8 @@ class Homee extends EventEmitter {
             debug('trying to connect');
             this._ws = new WebSocket(
                 this._wsUrl() + '/connection?access_token=' + this._token,
-                [],
+                'v2', // Sec-WebSocket-Protocol
                 {
-                    protocol: 'v2',
                     protocolVersion: 13,
                     origin: this._url(),
                     handshakeTimeout: 5000,
