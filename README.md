@@ -1,7 +1,5 @@
 # homee API wrapper
 
-> work in progress
-
 a library to interact with [homee](https://hom.ee)
 
 ## Installation
@@ -36,16 +34,16 @@ homee.connect().then(() => {
 
 ### Events
 ```js
-    
+
     // handle at least the "error" event to prevent crashing
     homee.on('error', (err) => {});
-    
+
     homee.on('message', (message) => {});
     homee.on('connected', () => {});
     homee.on('reconnect', (retries) => {})
     homee.on('disconnected', (reason) => {});
     homee.on('maxRetries', (maxRetries) => {});
-    
+
     // special events
     homee.on('user', (user) => {})
     homee.on('attribtue', (attribute) => {})
@@ -74,7 +72,7 @@ homee.getNodesByGroup(id); // id or group name
 // get diary entries (you should use at least one parameter to shrink the result set)
 homee.getDiary(from, till, limit);
 
-// get History for node or attribute (type), from and till are unix timestamps 
+// get History for node or attribute (type), from and till are unix timestamps
 homee.getHistory(type, id, from, till, limit);
 
 // close connection
