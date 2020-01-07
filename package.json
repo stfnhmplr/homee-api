@@ -4,6 +4,8 @@
   "description": "a library to interact with homee",
   "main": "homee.js",
   "scripts": {
+    "lint": "./node_modules/.bin/eslint .",
+    "lint:fix": "npm run lint -- --fix",
     "test": "mocha --require babel-core/register"
   },
   "keywords": [
@@ -17,7 +19,7 @@
     "debug": "^4.1.1",
     "request": "^2.88.0",
     "sha.js": "^2.4.11",
-    "ws": "^7.1.2"
+    "ws": "^7.2.1"
   },
   "directories": {
     "lib": "lib",
@@ -25,8 +27,12 @@
   },
   "devDependencies": {
     "babel": "^6.23.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-register": "^6.26.0",
     "chai": "^4.2.0",
+    "eslint": "^6.6.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.18.2",
     "mocha": "^5.2.0"
   },
   "repository": {
@@ -36,11 +42,5 @@
   "bugs": {
     "url": "https://github.com/stfnhmplr/homee-api/issues"
   },
-  "homepage": "https://github.com/stfnhmplr/homee-api#readme",
-  "prettier": {
-    "singleQuote": true,
-    "tabWidth": 4,
-    "trailingComma": "es5",
-    "printWidth": 100
-  }
+  "homepage": "https://github.com/stfnhmplr/homee-api#readme"
 }
