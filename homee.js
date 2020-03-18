@@ -463,7 +463,9 @@ class Homee extends EventEmitter {
   disconnect() {
     this.shouldClose = true;
 
-    this.ws.close(1000, 'closed by user request');
+    if (this.ws) {
+      this.ws.close(1000, 'closed by user request');
+    }
     debug('connection closed');
     this.emit('disconnected', 'closed by user request');
   }
