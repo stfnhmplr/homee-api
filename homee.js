@@ -210,6 +210,7 @@ class Homee extends EventEmitter {
    * @param {string}  message  the message, i.e. 'GET:nodes'
    */
   send(message) {
+    if (!this.connected || !this.ws) return;
     debug('sending message "%s" to homee', message);
 
     this.ws.send(message, (err) => {
@@ -354,9 +355,11 @@ class Homee extends EventEmitter {
         return;
       }
       this.connected = false;
-      this.ws.ping((err) => {
-        if (err) debug('error sending ping command to homee: %s', err.toString());
-      });
+      if (this.ws) {
+        this.ws.ping((err) => {
+          if (err) debug('error sending ping command to homee: %s', err.toString());
+        });
+      }
     }, 30000);
   }
 
