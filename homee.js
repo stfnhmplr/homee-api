@@ -92,22 +92,24 @@ class Homee extends EventEmitter {
       }
       request.post(options, (err, res, body) => {
         if (!err && res.statusCode === 200) {
-          // eslint-disable-next-line
-          this.token = body.split('&')[0].split('=')[1];
-          // eslint-disable-next-line
-          this.expires = Date.now() + parseInt(body.split('&')[3].split('=')[1], 10) * 1000;
-          debug(
-            'received access token, valid until: %s',
-            new Date(this.expires).toISOString(),
-          );
+          const re = /^access_token=([0-z]+)&.*&expires=(\d+)$/;
+          const matches = body.match(re);
+          if (!matches) {
+            reject(new Error('invalid response'));
+            return;
+          }
+
+          let expires;
+          [, this.token, expires] = matches;
+          this.expires = Date.now() + expires * 1000;
+
+          debug(`received access token, valid until: ${new Date(this.expires).toISOString()}`);
           resolve(this.token);
         } else if (!err && res.statusCode !== 200) {
-          debug('cannot receive access token, received status %d', res.statusCode);
-          reject(
-            new Error(`cannot receive access token, received status ${res.statusCode}`),
-          );
+          debug(`cannot receive access token, received status ${res.statusCode}`);
+          reject(new Error(`cannot receive access token, received status ${res.statusCode}`));
         } else {
-          debug('cannot receive access token, error %s', err);
+          debug(`cannot receive access token, error ${err}`);
           reject(new Error(`cannot receive access token, error ${err}`));
         }
       });
