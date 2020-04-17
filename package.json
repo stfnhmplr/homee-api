@@ -32,8 +32,8 @@
     "chai": "^4.2.0",
     "eslint": "^6.6.0",
     "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-plugin-import": "^2.20.1",
-    "mocha": "^5.2.0"
+    "eslint-plugin-import": "^2.20.2",
+    "mocha": "^6.2.0"
   },
   "repository": {
     "type": "git",
