@@ -289,19 +289,17 @@ class Homee extends EventEmitter {
   handleAttributeChange(attribute) {
     debug(`attribute with id #${attribute.id} changed`);
 
-    if (!this.nodes.length) {
+    try {
+      const nodeIndex = this.nodes.findIndex((node) => node.id === attribute.node_id);
+      const attributeIndex = this.nodes[nodeIndex].attributes.findIndex(
+        (a) => a.id === attribute.id,
+      );
+      this.nodes[nodeIndex].attributes[attributeIndex] = attribute;
+      this.emit('attribute', { ...attribute, node: this.nodes[nodeIndex] });
+    } catch (e) {
+      debug('Cannot find node, emitting attribute only');
       this.emit('attribute', attribute);
-      return;
     }
-
-    const nodeIndex = this.nodes.findIndex((node) => node.id === attribute.node_id);
-    const attributeIndex = this.nodes[nodeIndex].attributes.findIndex(
-      (a) => a.id === attribute.id,
-    );
-
-    this.nodes[nodeIndex].attributes[attributeIndex] = attribute;
-
-    this.emit('attribute', { ...attribute, node: this.nodes[nodeIndex] });
   }
 
   /**
