@@ -5,7 +5,8 @@
  */
 
 const WebSocket = require('ws');
-const request = require('request');
+const axios = require('axios');
+const qs = require('qs');
 const shajs = require('sha.js');
 const EventEmitter = require('events');
 const debug = require('debug')('homee');
@@ -56,7 +57,6 @@ class Homee extends EventEmitter {
     this.connected = false;
     this.retries = 0;
     this.shouldClose = false;
-
     this.enums = Enums;
   }
 
@@ -67,51 +67,66 @@ class Homee extends EventEmitter {
    */
   getAccessToken() {
     debug('get access token');
+
+    const authBuffer = Buffer.from(
+      `${this.user}:${shajs('sha512').update(this.password).digest('hex')}`,
+    );
+
     const options = {
+      method: 'post',
+      timeout: 2500,
       url: `${this.url()}/access_token`,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      form: {
+      headers: {
+        Authorization: `Basic ${authBuffer.toString('base64')}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      data: qs.stringify({
         device_name: this.device,
         device_hardware_id: this.deviceId,
         device_os: this.enums.CADeviceOS.CADeviceOSLinux,
         device_type: this.enums.CADeviceType.CADeviceTypeNone,
         device_app: this.enums.CADeviceApp.CADeviceAppHomee,
-      },
-      auth: {
-        user: this.user,
-        pass: shajs('sha512')
-          .update(this.password)
-          .digest('hex'),
-      },
+      }),
     };
 
     return new Promise((resolve, reject) => {
       if (this.token && this.expires > Date.now()) {
         debug('token still valid');
-        resolve(this.token);
+        return resolve(this.token);
       }
-      request.post(options, (err, res, body) => {
-        if (!err && res.statusCode === 200) {
-          const re = /^access_token=([0-z]+)&.*&expires=(\d+)$/;
-          const matches = body.match(re);
-          if (!matches) {
-            reject(new Error('invalid response'));
-            return;
-          }
 
-          let expires;
-          [, this.token, expires] = matches;
-          this.expires = Date.now() + expires * 1000;
+      if (this.retries) {
+        debug('reconnect attempt #%d', this.retries);
+        this.emit('reconnect', this.retries);
+      }
 
-          debug(`received access token, valid until: ${new Date(this.expires).toISOString()}`);
-          resolve(this.token);
-        } else if (!err && res.statusCode !== 200) {
-          debug(`cannot receive access token, received status ${res.statusCode}`);
-          reject(new Error(`cannot receive access token, received status ${res.statusCode}`));
-        } else {
-          debug(`cannot receive access token, error ${err}`);
-          reject(new Error(`cannot receive access token, error ${err}`));
+      this.retries += 1;
+      if (this.retries > this.maxRetries) {
+        this.emit('maxRetries', this.maxRetries);
+        return reject(new Error(`reached max retries (${this.maxRetries})`));
+      }
+
+      return axios(options).then((res) => {
+        const re = /^access_token=([0-z]+)&.*&expires=(\d+)$/;
+        const matches = res.data.match(re);
+        if (!matches) return reject(new Error('invalid response'));
+
+        let expires;
+        [, this.token, expires] = matches;
+        this.expires = Date.now() + expires * 1000;
+
+        debug(`received access token, valid until: ${new Date(this.expires).toISOString()}`);
+        this.retries = 0;
+        return resolve(this.token);
+      }).catch((err) => {
+        debug(`cannot receive access token, ${err}`);
+        if (err.response) {
+          return reject(
+            new Error(`Request failed with status ${err.response.status} ${err.response.statusText}`),
+          );
         }
+        return setTimeout(() => resolve(this.getAccessToken()),
+          this.reconnectInterval * this.retries);
       });
     });
   }
