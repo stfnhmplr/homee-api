@@ -32,6 +32,8 @@ homee.connect().then(() => {
     }
 ```
 
+homee accepts only one connection per device. Therefore, you must specify a unique device name when using the API multiple times. 
+
 ### Events
 ```js
 
