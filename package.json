@@ -16,7 +16,7 @@
   "author": "stfnhmplr <stfnhmplr@gmail.com> (https://himpler.com)",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.20.0",
+    "axios": "^0.21.1",
     "debug": "^4.2.0",
     "qs": "^6.9.4",
     "sha.js": "^2.4.11",
