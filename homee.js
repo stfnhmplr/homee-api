@@ -11,6 +11,7 @@ const shajs = require('sha.js');
 const EventEmitter = require('events');
 const debug = require('debug')('homee');
 const Enums = require('./lib/enums');
+const { updateList } = require('./lib/helpers');
 
 class Homee extends EventEmitter {
   /**
@@ -51,6 +52,7 @@ class Homee extends EventEmitter {
     this.nodes = [];
     this.groups = [];
     this.relationships = [];
+    this.plans = [];
     this.ws = null;
     this.token = '';
     this.expires = 0;
@@ -262,21 +264,34 @@ class Homee extends EventEmitter {
         this.nodes = message.all.nodes;
         this.groups = message.all.groups;
         this.relationships = message.all.relationships;
+        this.plans = message.all.plans;
         break;
       case 'attribute':
         this.handleAttributeChange(message.attribute);
+        break;
+      case 'group':
+        updateList(this.groups, message.group);
         break;
       case 'groups':
         this.groups = message.groups;
         break;
       case 'node':
-        this.updateNodes(message.node);
+        updateList(this.nodes, message.node);
         break;
       case 'nodes':
         this.nodes = message.nodes;
         break;
+      case 'relationship':
+        updateList(this.relationships, message.relationship);
+        break;
       case 'relationships':
         this.relationships = message.relationships;
+        break;
+      case 'plan':
+        updateList(this.plans, message.plan);
+        break;
+      case 'plans':
+        this.plans = message.plans;
         break;
       case 'attribute_history':
       case 'homeegram_history':
@@ -406,15 +421,6 @@ class Homee extends EventEmitter {
 
     const nodeIds = this.relationships.filter((r) => r.group_id === groupId).map((r) => r.node_id);
     return this.nodes.filter((n) => nodeIds.indexOf(n.id) > -1);
-  }
-
-  /**
-   *
-   * @param node {Node}
-   */
-  updateNodes(node) {
-    const nodeIndex = this.nodes.findIndex((n) => n.id === node.id);
-    this.nodes[nodeIndex] = node;
   }
 
   /**
