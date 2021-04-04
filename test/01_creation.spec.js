@@ -1,19 +1,18 @@
-const { assert } = require('chai');
+const { expect } = require('chai');
 const Homee = require('../homee');
 
 describe('01 creation', () => {
   describe('#device', () => {
     it('should have a default device-name', () => {
       const homee = new Homee('192.168.178.1', 'userxy', 'super-secret');
-
-      assert.equal(homee.device, 'homeeApi');
+      expect(homee.device).to.equal('homeeApi');
     });
 
     it('should have a non default device-name if specified', () => {
       const homee = new Homee('192.168.178.1', 'userxy', 'super-secret', {
         device: 'sample device',
       });
-      assert.equal(homee.device, 'sample device');
+      expect(homee.device).to.equal('sample device');
     });
   });
 
@@ -21,7 +20,7 @@ describe('01 creation', () => {
     it('should have an kebab case default device-id', () => {
       const homee = new Homee('192.168.178.1', 'userxy', 'super-secret');
 
-      assert.equal(homee.deviceId, 'homee-api');
+      expect(homee.deviceId).to.equal('homee-api');
     });
 
     it('should have a non default, kebab case device-id if specified', () => {
@@ -29,7 +28,7 @@ describe('01 creation', () => {
         device: 'sample device',
       });
 
-      assert.equal(homee.deviceId, 'sample-device');
+      expect(homee.deviceId).to.equal('sample-device');
     });
   });
 
@@ -40,39 +39,39 @@ describe('01 creation', () => {
         reconnect: false,
       });
 
-      assert.equal(homee.reconnectInterval, 5000);
-      assert.equal(homee.maxRetries, Infinity);
+      expect(homee.reconnectInterval).to.equal(5000);
+      expect(homee.maxRetries).to.equal(Infinity);
     });
 
     it('should have default options if no custom options provided', () => {
       const homee = new Homee('192.168.178.1', 'userxy', 'supersecret');
 
-      assert.equal(homee.device, 'homeeApi');
-      assert.equal(homee.shouldReconnect, true);
-      assert.equal(homee.reconnectInterval, 5000);
-      assert.equal(homee.maxRetries, Infinity);
+      expect(homee.device).to.equal('homeeApi');
+      expect(homee.shouldReconnect).to.equal(true);
+      expect(homee.reconnectInterval).to.equal(5000);
+      expect(homee.maxRetries).to.equal(Infinity);
     });
   });
 
   describe('#url', () => {
     it('should have a local url if a ip adress is specified', () => {
       const homee = new Homee('192.168.178.1', 'userxy', 'super-secret');
-      assert.equal(homee.url(), 'http://192.168.178.1:7681');
+      expect(homee.url()).to.equal('http://192.168.178.1:7681');
     });
 
     it('should have a remote url if a homee-id is specified', () => {
       const homee = new Homee('0123456789ab', 'userxy', 'super-secret');
-      assert.equal(homee.url(), 'https://0123456789ab.hom.ee');
+      expect(homee.url()).to.equal('https://0123456789ab.hom.ee');
     });
 
     it('should have a local websocket url if a ip adress is specified', () => {
       const homee = new Homee('192.168.178.1', 'userxy', 'super-secret');
-      assert.equal(homee.wsUrl(), 'ws://192.168.178.1:7681');
+      expect(homee.wsUrl()).to.equal('ws://192.168.178.1:7681');
     });
 
     it('should have a remote websocket url if a homee-id is specified', () => {
       const homee = new Homee('0123456789ab', 'userxy', 'super-secret');
-      assert.equal(homee.wsUrl(), 'wss://0123456789ab.hom.ee');
+      expect(homee.wsUrl()).to.equal('wss://0123456789ab.hom.ee');
     });
   });
 });
