@@ -52,6 +52,7 @@ class Homee extends EventEmitter {
     this.nodes = [];
     this.groups = [];
     this.relationships = [];
+    this.homeegrams = [];
     this.plans = [];
     this.ws = null;
     this.token = '';
