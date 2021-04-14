@@ -112,6 +112,33 @@ describe('04 message handling', () => {
     });
   });
 
+  describe('#store homeegram data', () => {
+    it('stores homeegrams from incoming messages', () => {
+      const msg = { homeegrams: [{ id: 27, name: 'homeegram27' }, { id: 28, name: 'homeegram28' }] };
+      homee.handleMessage(msg);
+
+      expect(homee.homeegrams).to.eql(msg.homeegrams);
+    });
+
+    it('updates changed homeegram from incoming messages', () => {
+      const msg = { homeegram: { id: 27, name: 'homeegram29' } };
+      homee.handleMessage(msg);
+
+      expect(homee.homeegrams).to.eql([{ id: 27, name: 'homeegram29' }, { id: 28, name: 'homeegram28' }]);
+    });
+
+    it('adds new homeegrams from incoming messages', () => {
+      const msg = { homeegram: { id: 25, name: 'homeegram25' } };
+      homee.handleMessage(msg);
+
+      expect(homee.homeegrams).to.eql([
+        { id: 27, name: 'homeegram29' },
+        { id: 28, name: 'homeegram28' },
+        { id: 25, name: 'homeegram25' },
+      ]);
+    });
+  });
+
   describe('#attribute handling', () => {
     it('handle attribute changes', () => {
       homee.nodes = [{

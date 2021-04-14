@@ -287,6 +287,12 @@ class Homee extends EventEmitter {
       case 'relationships':
         this.relationships = message.relationships;
         break;
+      case 'homeegram':
+        updateList(this.homeegrams, message.homeegram);
+        break;
+      case 'homeegrams':
+        this.homeegrams = message.homeegrams;
+        break;
       case 'plan':
         updateList(this.plans, message.plan);
         break;
