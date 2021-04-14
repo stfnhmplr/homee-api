@@ -305,7 +305,7 @@ class Homee extends EventEmitter {
         this.emit('history', messageType.replace('_history', ''), message[messageType]);
         break;
       default:
-        debug(`Unknown message type "${messageType}"`);
+        debug(`No special handling for message of type "${messageType}"`);
     }
 
     // broadcast on specific channel
