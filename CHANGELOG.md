@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.21.0] - 2021-04-14
+### Added
+- Added homeegrams to class
+
+## [0.20.0] - 2021-04-04
+### Added
+- Added plans to class
+### Changed
+- Fixed property updating
+
+## [0.19.0] - 2021-03-20
+### Changed
+- Updated enums
+
 ## [0.18.0] - 2020-12-10
 ### Changed
 - Updated enums
