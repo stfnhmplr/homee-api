@@ -266,6 +266,7 @@ class Homee extends EventEmitter {
         this.groups = message.all.groups;
         this.relationships = message.all.relationships;
         this.plans = message.all.plans;
+        this.homeegrams = message.all.homeegrams;
         break;
       case 'attribute':
         this.handleAttributeChange(message.attribute);

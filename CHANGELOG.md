@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.21.1] - 2021-04-15
+### Changed
+- Bugfix: Store homeegrams to class if message type is all
+
 ## [0.21.0] - 2021-04-14
 ### Added
 - Added homeegrams to class

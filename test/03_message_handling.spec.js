@@ -137,6 +137,25 @@ describe('04 message handling', () => {
         { id: 25, name: 'homeegram25' },
       ]);
     });
+
+    it('stores data from message of type "all"', () => {
+      const msg = {
+        all: {
+          nodes: [{ id: 50 }],
+          groups: [{ id: 51 }],
+          relationships: [{ id: 52 }],
+          plans: [{ id: 53 }],
+          homeegrams: [{ id: 54 }],
+        },
+      };
+      homee.handleMessage(msg);
+
+      expect(homee.nodes).to.eql([{ id: 50 }]);
+      expect(homee.groups).to.eql([{ id: 51 }]);
+      expect(homee.relationships).to.eql([{ id: 52 }]);
+      expect(homee.plans).to.eql([{ id: 53 }]);
+      expect(homee.homeegrams).to.eql([{ id: 54 }]);
+    });
   });
 
   describe('#attribute handling', () => {
