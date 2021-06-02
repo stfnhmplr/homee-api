@@ -13,7 +13,7 @@
     "smarthome",
     "automation"
   ],
-  "author": "stfnhmplr <stfnhmplr@gmail.com> (https://himpler.com)",
+  "author": "Stefan Himpler <info@himpler.com> (https://himpler.com)",
   "license": "MIT",
   "dependencies": {
     "axios": "^0.21.1",
