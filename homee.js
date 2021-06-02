@@ -201,7 +201,13 @@ class Homee extends EventEmitter {
     });
 
     this.ws.on('message', (message) => {
-      this.handleMessage(JSON.parse(message));
+      try {
+        const parsedMessage = JSON.parse(message);
+        this.handleMessage(parsedMessage);
+      } catch (err) {
+        debug(`can't parse json message ${message}`);
+        this.emit('error', 'Received unexpected message from websocket');
+      }
     });
 
     this.ws.on('close', (reason) => {

@@ -22,7 +22,7 @@ class HomeeMockup {
       if (url.parse(req.url).path === `/connection?access_token=${this.accessToken}`) {
         this.ws.handleUpgrade(req, socket, head, () => {
           this.ws.emit('connection', this.ws, req);
-          this.ws.on('message', (msg) => this.handleMessage(msg));
+          // this.ws.on('message', (msg) => this.handleMessage(msg));
         });
       } else {
         socket.destroy();

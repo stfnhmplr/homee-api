@@ -27,5 +27,15 @@ describe('02 connection', () => {
         done();
       });
     });
+
+    it('handles invalid messages properly', (done) => {
+      const msg = { node: { id: 1 } };
+      global.homeeMockup.send(`x${JSON.stringify(msg)}`);
+
+      homee.on('error', (message) => {
+        expect(message).to.equal('Received unexpected message from websocket');
+        done();
+      });
+    });
   });
 });
