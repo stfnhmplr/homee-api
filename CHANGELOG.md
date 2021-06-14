@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.22.0] - 2021-06-14
+### Changed
+- Updated enums
+- Errors due to unexpected messages are now caught
+
 ## [0.21.1] - 2021-04-15
 ### Changed
 - Bugfix: Store homeegrams to class if message type is all
