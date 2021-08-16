@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.23.0] - 2021-08-16
+### Added
+- Added function to query the logfile
+
 ## [0.22.0] - 2021-06-14
 ### Changed
 - Updated enums

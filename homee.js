@@ -580,6 +580,22 @@ class Homee extends EventEmitter {
     if (/^[0-z]{12}$/.test(this.host)) return `wss://${this.host}.hom.ee`;
     return `ws://${this.host}:7681`;
   }
+
+  getLog() {
+    return new Promise((resolve, reject) => {
+      const options = {
+        timeout: 5000,
+        url: `${this.url()}/logfile.log`,
+        params: {
+          access_token: this.token,
+        },
+      };
+
+      axios(options)
+        .then((res) => resolve(res.data))
+        .catch((err) => reject(err));
+    });
+  }
 }
 
 module.exports = Homee;
