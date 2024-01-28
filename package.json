@@ -16,7 +16,7 @@
   "author": "Stefan Himpler <info@himpler.com> (https://himpler.com)",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^1.6.7",
     "debug": "^4.2.0",
     "qs": "^6.9.4",
     "sha.js": "^2.4.11",
@@ -34,7 +34,7 @@
     "eslint": "^6.6.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-plugin-import": "^2.22.1",
-    "mocha": "^6.2.0"
+    "mocha": "^10.2.0"
   },
   "repository": {
     "type": "git",
