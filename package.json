@@ -1,6 +1,6 @@
 {
   "name": "homee-api",
-  "version": "0.24.3",
+  "version": "0.24.4",
   "description": "a library to interact with homee",
   "main": "homee.js",
   "scripts": {
